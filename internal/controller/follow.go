@@ -31,7 +31,7 @@ func Follow(c *gin.Context) {
 	err := dao.Follow(ctx.uid, req.FollowedID, req.Mark, req.Group)
 	if err != nil {
 		logrus.WithContext(ctx).Errorln("follow failed", ctx.uid, req.FollowedID, err)
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodeServiceError, err.Error())
 		return
 	}
 	ctx.Data(FollowResponse{})
@@ -53,7 +53,7 @@ func Unfollow(c *gin.Context) {
 	err := dao.Unfollow(ctx.uid, req.FollowedID)
 	if err != nil {
 		logrus.WithContext(ctx).Errorln("follow failed", ctx.uid, req.FollowedID, err)
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodeServiceError, err.Error())
 		return
 	}
 	ctx.Data(UnfollowResponse{})
@@ -87,7 +87,7 @@ func EditFollowed(c *gin.Context) {
 	}
 	if err != nil {
 		logrus.WithContext(ctx).Errorln("follow failed", ctx.uid, req.FollowedID, req.Key, err)
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodeServiceError, err.Error())
 		return
 	}
 	ctx.Data(EditFollowResponse{})
@@ -122,7 +122,7 @@ func FollowedList(c *gin.Context) {
 	data, err := dao.FollowList(ctx.uid, req.LastID, req.Count)
 	if err != nil {
 		logrus.WithContext(ctx).Errorln(ctx.uid, err)
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodeServiceError, err.Error())
 		return
 	}
 	re := new(FollowedListResponse)
@@ -152,7 +152,7 @@ func FollowerList(c *gin.Context) {
 	data, err := dao.FollowerList(ctx.uid, req.LastID, req.Count)
 	if err != nil {
 		logrus.WithContext(ctx).Errorln(ctx.uid, err)
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodeServiceError, err.Error())
 		return
 	}
 	re := new(FollowedListResponse)

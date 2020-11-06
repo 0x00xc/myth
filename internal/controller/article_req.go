@@ -42,6 +42,20 @@ type Article struct {
 	Visible   int    `json:"visible"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	Content   string `json:"content,omitempty"`
+}
+
+func (a *Article) Set(v *dao.Article) {
+	a.ID = v.ID
+	a.UID = v.UID
+	a.Title = v.Title
+	a.Thumb = v.Thumb
+	a.Format = v.Format
+	a.Status = v.Status
+	a.Visible = v.Visible
+	a.CreatedAt = v.CreatedAt.Format("2006-01-02 15:04:05")
+	a.UpdatedAt = v.UpdatedAt.Format("2006-01-02 15:04:05")
+	a.Content = v.Content
 }
 
 func (r *ArticleListResponse) Set(data []*dao.Article) {
@@ -98,4 +112,13 @@ func (r *EditArticleRequest) M() dao.M {
 }
 
 type EditArticleResponse struct {
+}
+
+type ArticleDetailRequest struct {
+	UID       int `json:"uid"        binding:"required"` //
+	ArticleID int `json:"article_id" binding:"required"` //
+}
+
+type ArticleDetailResponse struct {
+	Article Article `json:"article"`
 }

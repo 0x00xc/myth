@@ -31,7 +31,7 @@ func NewArticle(c *gin.Context) {
 	err := art.New()
 	if err != nil {
 		logrus.WithContext(ctx).Errorln(err)
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodeServiceError, err.Error())
 		return
 	}
 	ctx.Data(NewArticleResponse{ID: art.ID})
@@ -46,11 +46,8 @@ func ArticleList(status int) func(c *gin.Context) {
 			logrus.WithContext(ctx).Errorln(err)
 			return
 		}
-
-		relation := dao.RelationStranger
-		if req.UID == ctx.uid {
-			relation = dao.RelationOwn
-		}
+		relation := dao.GetRelation(ctx.uid, req.UID)
+		logrus.WithContext(ctx).Info()
 
 		if req.Limit == 0 {
 			req.Limit = 10
@@ -65,18 +62,38 @@ func ArticleList(status int) func(c *gin.Context) {
 		case dao.ArticleStatusRecycle:
 			data, err = dao.ArticleRecycledList(req.UID, req.LastID, req.Limit)
 		default:
-			ctx.Code(CodeFailed, "invalid article status")
+			ctx.Code(CodeServiceError, "invalid article status")
 			return
 		}
 		if err != nil {
 			logrus.WithContext(ctx).Errorln(err)
-			ctx.Code(CodeFailed, err.Error())
+			ctx.Code(CodeNotFound, err.Error())
 			return
 		}
 		re := new(ArticleListResponse)
 		re.Set(data)
 		ctx.Data(re)
 	}
+}
+
+func ArticleDetail(c *gin.Context) {
+	ctx := With(c)
+	req := new(ArticleDetailRequest)
+	if err := ctx.ShouldBindJSON(req); err != nil {
+		ctx.Code(CodeParamsError, err.Error())
+		logrus.WithContext(ctx).Errorln(err)
+		return
+	}
+	relation := dao.GetRelation(ctx.uid, req.UID)
+	data, err := dao.FindArticle(req.ArticleID, relation)
+	if err != nil {
+		ctx.Code(CodeNotFound)
+		logrus.WithContext(ctx).Errorln(err)
+		return
+	}
+	re := new(ArticleDetailResponse)
+	re.Article.Set(data)
+	ctx.Data(re)
 }
 
 func EditArticle(c *gin.Context) {
@@ -94,7 +111,7 @@ func EditArticle(c *gin.Context) {
 	}
 	err := dao.EditArticle(req.ID, ctx.uid, edit)
 	if err != nil {
-		ctx.Code(CodeFailed, "")
+		ctx.Code(CodeServiceError, "")
 		logrus.WithContext(ctx).Errorln(err)
 		return
 	}

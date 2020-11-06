@@ -6,10 +6,6 @@
  */
 package dao
 
-import (
-	"log"
-)
-
 const (
 	ArticleStatusRecycle = -1 //
 	ArticleStatusDraft   = 0  //
@@ -22,6 +18,7 @@ const (
 
 	RelationStranger = 0
 	RelationFollower = 1
+	RelationFollowed = 2
 	RelationOwn      = 100
 )
 
@@ -34,6 +31,7 @@ type Article struct {
 	Format  int
 	Status  int
 	Visible int
+	Type    int
 }
 
 func (a *Article) New() error {
@@ -52,7 +50,6 @@ func articleList(uid, status, relation, lastID, limit int) ([]*Article, error) {
 	}
 	var data []*Article
 	var where = db.Model(&Article{})
-	log.Println(uid, status, relation, lastID, limit)
 	if lastID > 0 {
 		where = db.Where("uid = ? AND status = ? AND visible <= ? AND id < ?", uid, status, relation, lastID)
 	} else {

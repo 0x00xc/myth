@@ -81,6 +81,29 @@ func FollowerList(uid int, lastID int, limit int) ([]*Follower, error) {
 	return data, err
 }
 
+func FindFollower(from, to int) (*Follower, error) {
+	f := new(Follower)
+	err := db.First(f, "uid = ? AND followed_id = ?", from, to).Error
+	return f, err
+}
+
+func GetRelation(from, to int) int {
+	if from == 0 {
+		return RelationStranger
+	}
+	if from == to {
+		return RelationOwn
+	}
+	f, err := FindFollower(from, to)
+	if err != nil {
+		return RelationStranger
+	}
+	if f.Both {
+		return RelationFollowed
+	}
+	return RelationFollower
+}
+
 //func RemoveFollower(uid int, followerID int) error {
 //
 //}

@@ -17,7 +17,8 @@ const (
 	CodeUsernameError = 20010
 	CodePasswordError = 20011
 	CodeCaptchaError  = 20020
-	CodeFailed        = 30000
+	CodeNotFound      = 20030
+	//CodeFailed        = 30000
 	CodeServiceError  = 50000
 )
 

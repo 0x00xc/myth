@@ -15,7 +15,6 @@ import (
 	"myth/internal/email"
 )
 
-
 func SignIn(c *gin.Context) {
 	ctx := With(c)
 	req := new(SignInRequest)
@@ -25,7 +24,7 @@ func SignIn(c *gin.Context) {
 	}
 	acc, token, err := auth.Auth(req.Username, req.Password)
 	if err != nil {
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodePasswordError, err.Error())
 		return
 	}
 	ctx.SetCookie("token", token, 86400*7, "", "", conf.C.Secure(), true)
@@ -37,7 +36,6 @@ func SignIn(c *gin.Context) {
 		Gender: acc.Gender,
 	})
 }
-
 
 func SignUp(c *gin.Context) {
 	ctx := With(c)
@@ -54,7 +52,7 @@ func SignUp(c *gin.Context) {
 	//}
 	acc, err := dao.CreateAccount(req.Username, req.Password, req.Email)
 	if err != nil {
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodeServiceError, err.Error())
 		logrus.WithContext(ctx).Errorln(err)
 		return
 	}
@@ -69,7 +67,6 @@ func SignUp(c *gin.Context) {
 	})
 }
 
-
 func EmailCaptcha(c *gin.Context) {
 	ctx := With(c)
 	req := new(EmailCaptchaRequest)
@@ -82,7 +79,7 @@ func EmailCaptcha(c *gin.Context) {
 	emailID, err := email.NewCaptcha(req.Email)
 	if err != nil {
 		logrus.WithContext(ctx).Errorln(err)
-		ctx.Code(CodeFailed, err.Error())
+		ctx.Code(CodeServiceError, err.Error())
 		return
 	}
 	ctx.Data(&EmailCaptchaResponse{EmailID: emailID})
