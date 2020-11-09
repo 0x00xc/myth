@@ -35,6 +35,9 @@ func createTable() {
 	db.CreateTable(&Account{})
 	db.CreateTable(&Article{})
 	db.CreateTable(&Follower{})
-	//db.CreateTable(&Moment{})
-	//db.CreateTable(&Timeline{})
+	db.CreateTable(&Moment{})
+	db.CreateTable(&Timeline{})
+	db.CreateTable(&Compilation{})
+	db.CreateTable(&CompilationArticle{})
+	db.CreateTable(&ArticleSubscribe{})
 }

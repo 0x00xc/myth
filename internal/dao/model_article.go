@@ -77,3 +77,9 @@ func EditArticle(id int, uid int, edit M) error {
 	err := db.Model(&Article{}).Where("id = ? AND uid = ?", id, uid).Updates(edit).Error
 	return err
 }
+
+func DeleteArticle(id int) error {
+	a := &Article{}
+	a.ID = id
+	return db.Delete(a).Error
+}
