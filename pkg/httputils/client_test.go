@@ -20,7 +20,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestPost(t *testing.T) {
-
+	JSON(PostJSON()).Decode()
 }
 
 func TestPostForm(t *testing.T) {

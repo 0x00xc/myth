@@ -30,6 +30,9 @@ func Logger(c *gin.Context) {
 
 func Auth(skip ...string) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
+		if array.InStrings(ctx.FullPath(), skip) {
+			return
+		}
 		token := strings.TrimSpace(strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer "))
 		if token == "" {
 			token, _ = ctx.Cookie("token")
@@ -38,10 +41,8 @@ func Auth(skip ...string) func(ctx *gin.Context) {
 			if info, err := auth.Verify(token); err == nil {
 				ctx.Set("uid", info.UID)
 				ctx.Set("open_id", info.OpenID)
+				return
 			}
-		}
-		if array.InStrings(ctx.FullPath(), skip) {
-			return
 		}
 		ctx.AbortWithStatus(http.StatusForbidden)
 	}

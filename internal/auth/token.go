@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"myth/pkg/hash"
 	"myth/pkg/rand"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,9 +27,10 @@ type Data struct {
 	signature string
 }
 
-func NewToken(uid int, exp int64, secret string) string {
+func NewToken(uid int, exp int64, secret string, crypt ...bool) string {
 	var a = Data{
 		UID:      uid,
+		OpenID:   strconv.Itoa(uid), //TODO
 		ExpireAt: time.Now().Unix() + exp,
 		Nonce:    rand.String(16),
 	}
