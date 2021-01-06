@@ -9,9 +9,11 @@ package app
 import (
 	"github.com/sirupsen/logrus"
 	"myth/internal/auth"
+	"myth/internal/chat"
 	"myth/internal/dao"
 	"myth/internal/email"
 	"myth/pkg/cache"
+	"sync"
 	"time"
 )
 
@@ -24,6 +26,7 @@ func prepare() {
 	go storage.Cleaning(time.Hour)
 	auth.Init(storage)
 	email.Init(storage)
+	chat.Init()
 }
 
 var httpserver = new(HTTPServer)
@@ -31,10 +34,23 @@ var httpserver = new(HTTPServer)
 func Start() {
 	prepare()
 
-	go httpserver.Serve()
-
+	do(httpserver.Serve)
+	do(chat.Serve)
 }
 
 func Stop() {
 	httpserver.Stop()
+	chat.Stop()
+	wg.Wait()
+	logrus.Infoln("stopped")
+}
+
+var wg = new(sync.WaitGroup)
+
+func do(f func()) {
+	wg.Add(1)
+	go func() {
+		f()
+		wg.Done()
+	}()
 }

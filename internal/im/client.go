@@ -7,7 +7,6 @@
 package im
 
 import (
-	"encoding/json"
 	"golang.org/x/net/websocket"
 	"time"
 )
@@ -18,24 +17,27 @@ type client struct {
 	exit      chan bool
 	heartbeat chan bool
 	timeout   time.Duration
-	//broadcast chan *ServerMessage
+	ping      func([]byte) bool
+	onMessage func(string, []byte, Messenger)
 }
 
-func newClient(id string, conn *websocket.Conn, timeout time.Duration) *client {
+func newClient(id string, conn *websocket.Conn, timeout time.Duration, ping func([]byte) bool, onMessage func(string, []byte, Messenger)) *client {
 	return &client{
 		id:        id,
 		conn:      conn,
 		exit:      make(chan bool),
 		heartbeat: make(chan bool),
 		timeout:   timeout,
+		ping:      ping,
+		onMessage: onMessage,
 	}
 }
 
-func (c *client) serve() {
+func (c *client) serve(m Messenger) {
 	if c.timeout == 0 {
 		c.timeout = time.Minute * 5
 	}
-	go c.accept()
+	go c.accept(m)
 	for {
 		select {
 		case <-time.After(c.timeout): //timeout
@@ -52,7 +54,7 @@ func (c *client) stop() {
 	c.conn.Close()
 }
 
-func (c *client) accept() {
+func (c *client) accept(m Messenger) {
 	defer close(c.exit)
 
 	for {
@@ -61,15 +63,10 @@ func (c *client) accept() {
 		if err != nil {
 			break
 		}
-		var msg = new(ClientMessage)
-		err = json.Unmarshal(data, msg)
-		if err != nil {
-			continue
-		}
-		if msg.Code == ClientPing {
+		if c.ping(data) {
 			c.heartbeat <- true
 		} else {
-			//c.messages <- msg
+			c.onMessage(c.id, data, m)
 		}
 	}
 }

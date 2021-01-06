@@ -11,24 +11,26 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"myth/conf"
-	"myth/internal/auth"
-	"myth/internal/im"
 	"net/http"
 )
 
 type HTTPServer struct {
-	srv  *http.Server
-	chat *im.Manager
+	srv *http.Server
 }
 
 func (s *HTTPServer) init() {
 	s.srv = new(http.Server)
 	s.srv.Addr = fmt.Sprintf(":%d", conf.C.AppPort)
-	s.chat = im.NewManager(nil, nil)
 
-	s.chat.Auth = auth.WSAuth
-	s.chat.OnConnected = func(id string, messenger im.Messenger) { logrus.Infoln(id, "connected") }
-	s.chat.OnDisConnected = func(id string, messenger im.Messenger) { logrus.Infoln(id, "disconnected") }
+	//opt := im.NewOptions()
+	//opt.Auth = auth.WSAuth
+	//opt.OnClientConnected = func(id string, messenger im.Messenger) { logrus.Infoln(id, "connected") }
+	//opt.OnClientDisConnected = func(id string, messenger im.Messenger) { logrus.Infoln(id, "disconnected") }
+	//opt.OnClientMessage = func(id string, data []byte, messenger im.Messenger) {
+	//	logrus.Infoln(id, string(data))
+	//	messenger.Send(id, []byte("hah"))
+	//}
+	//s.chat = im.NewManager(opt)
 }
 
 func (s *HTTPServer) Serve() {
@@ -37,7 +39,6 @@ func (s *HTTPServer) Serve() {
 	//if len(conf.C.AppCert) == 2 {
 	//	//TODO
 	//}
-	go s.chat.Serve() //TODO
 	logrus.Infoln("http server listen on", s.srv.Addr)
 	err := s.srv.ListenAndServe()
 	if err != nil {
@@ -47,5 +48,4 @@ func (s *HTTPServer) Serve() {
 
 func (s *HTTPServer) Stop() {
 	s.srv.Shutdown(context.Background())
-	s.chat.Stop()
 }

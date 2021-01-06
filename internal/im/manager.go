@@ -20,36 +20,20 @@ type Manager struct {
 	exit    chan bool
 	limit   chan bool
 	opt     *Options
-
-	Auth           func(conn *websocket.Conn) (string, error)
-	OnConnected    func(id string, messenger Messenger)
-	OnDisConnected func(id string, messenger Messenger)
 }
 
-func NewManager(opt *Options, queue Queue) *Manager {
+func NewManager(opt *Options) *Manager {
 	if opt == nil {
 		opt = new(Options)
-	}
-	if queue == nil {
-		queue = NewQueue(128)
 	}
 	opt.mDefault()
 	return &Manager{
 		locker:  new(sync.RWMutex),
 		clients: make(map[string]*client),
-		queue:   queue,
+		queue:   opt.Queue,
 		exit:    make(chan bool),
 		opt:     opt,
 		limit:   make(chan bool, opt.MessageLimit),
-		Auth: func(conn *websocket.Conn) (string, error) {
-			return conn.RemoteAddr().String(), nil
-		},
-		OnConnected: func(id string, messenger Messenger) {
-
-		},
-		OnDisConnected: func(id string, messenger Messenger) {
-
-		},
 	}
 }
 
@@ -72,16 +56,23 @@ func (m *Manager) Serve() {
 }
 
 func (m *Manager) Join(conn *websocket.Conn) error {
-	id, err := m.Auth(conn)
+	var id string
+	var err error
+	for i := 0; i < m.opt.AuthRetry; i++ {
+		id, err = m.opt.Auth(conn)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return err
 	}
-	m.OnConnected(id, m)
-	defer m.OnDisConnected(id, m)
-	c := newClient(id, conn, m.opt.Heartbeat)
+	m.opt.OnClientConnected(id, m)
+	defer m.opt.OnClientDisConnected(id, m)
+	c := newClient(id, conn, m.opt.Heartbeat, m.opt.IsClientPing, m.opt.OnClientMessage)
 	m.join(c)
 	defer m.remove(id)
-	c.serve()
+	c.serve(m)
 	return nil
 }
 
@@ -104,6 +95,13 @@ func (m *Manager) doMessage(msg Message) {
 			//TODO m.queue.Put(msg)
 			return
 		case <-m.exit:
+			//TODO m.queue.Put(msg)
+			return
+		}
+	} else if m.opt.MessageWaitTimeout < 0 {
+		select {
+		case m.limit <- true:
+		default:
 			//TODO m.queue.Put(msg)
 			return
 		}

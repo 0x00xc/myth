@@ -8,6 +8,7 @@ package app
 
 import (
 	"github.com/gin-gonic/gin"
+	"myth/internal/chat"
 	"myth/internal/controller"
 	"myth/internal/dao"
 	"net/http"
@@ -45,9 +46,9 @@ func (s *HTTPServer) route() {
 	art.POST("/recycled", controller.ArticleList(dao.ArticleStatusRecycle))
 	art.POST("/detail", controller.ArticleDetail)
 
-	chat := v1.Group("/chat")
-	chat.GET("/ws", wrap(s.chat.Handler()))
-	chat.POST("/ws", wrap(s.chat.Handler())) //实际上一般是通过GET方法请求，可能用不到POST
+	ichat := v1.Group("/chat")
+	ichat.GET("/ws", wrap(chat.Handler()))
+	ichat.POST("/ws", wrap(chat.Handler())) //实际上一般是通过GET方法请求，可能用不到POST
 	s.srv.Handler = router
 }
 
